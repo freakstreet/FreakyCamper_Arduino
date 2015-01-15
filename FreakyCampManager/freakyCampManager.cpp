@@ -130,16 +130,18 @@ void freakyCampManagerLoop(){
 		Serial.println("\r\nData Packet.");
 
 		for( uint8_t i = 0; i < len; i++ ) {
-			Serial.print((char)msg[i]);
+			Serial.print((byte)msg[i]);
 		}
 	}
+	//else Serial.print(".");
+	delay(50);
 }
 
 void sendAllTelemetry(){
 	byte len;
 	len = tmBuilderTemperature(txBuffer);
 	sendTM(len, txBuffer);
-	len = tmBuilderSwitch(txBuffer);
+/*	len = tmBuilderSwitch(txBuffer);
 	sendTM(len, txBuffer);
 	len = tmBuilderTension(txBuffer);
 	sendTM(len, txBuffer);
@@ -150,7 +152,7 @@ void sendAllTelemetry(){
 	len = tmBuilderLight(txBuffer);
 	sendTM(len, txBuffer);
 	len = tmBuilderColdHot(txBuffer);
-	sendTM(len, txBuffer);
+	sendTM(len, txBuffer);*/
 }
 
 
