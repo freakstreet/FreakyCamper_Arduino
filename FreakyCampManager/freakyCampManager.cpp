@@ -24,15 +24,91 @@ ADK adk(&Usb,"Freakstreet",
             "http://www.FreakyCamperTools.com",
             "0000000000000009");
 	    
+byte rxCounter = 0;
+byte headerCount = 0;
+byte footerCount = 0;
+boolean readyForDatas = false;
+
+
+// function integrated in main loop, call every time when not in timer 1s called procedure
+void freakyCampManagerLoop(){
+	uint8_t rcode;
+	uint8_t msg[8] = { 0x00 };
+	const char* recv = "Received: "; 
+
+	//checkCampInputs();
+	Usb.Task();
+	if( adk.isReady() == false ) {
+		return;
+	}
+
+	uint16_t len = 8;
+   
+	rcode = adk.RcvData(&len, msg);
+	if( rcode & ( rcode != hrNAK )) {
+		USBTRACE2("Data rcv. :", rcode );
+	} 
+	if(len > 0) {
+		/*
+		Serial.println("\r\nData Packet.");
+		for( uint8_t i = 0; i < len; i++ ) {
+			Serial.print("0x");
+			Serial.print((byte)msg[i], HEX);
+		}*/
+		
+		if (len == 1){
+			// check data value
+			if (msg[0] == PROT_HEADER) {
+				footerCount = 0;
+				if (headerCount < PROT_REPEAT_HEADER) headerCount++;
+				// if still acquiring frame, resetting rx buffer
+				if (readyForDatas) rxCounter = 0;
+				// check if got all header bytes
+				readyForDatas = (headerCount == PROT_REPEAT_HEADER);
+			}
+			else if (readyForDatas && (msg[0] == PROT_FOOTER)){
+				footerCount++;
+				headerCount = 0;
+				// if reached end of footer
+				if (footerCount == PROT_REPEAT_HEADER){
+					Serial.println("");
+					Serial.print("Got TC :");
+					for( uint8_t i = 0; i < rxCounter; i++ ) {
+						Serial.print(" 0x");
+						Serial.print(rxBuffer[i], HEX);
+					}
+					Serial.println("");
+					footerCount = 0;
+					readyForDatas = false;
+					
+					// TODO : handle TC commane
+					
+					rxCounter = 0;
+				}
+			}
+			else if (readyForDatas) 
+				rxBuffer[rxCounter++] = msg[0];
+				
+		}
+	}
+	//else Serial.print(".");
+	delay(25);
+}
+	    
 void sendTM(byte length, byte* data){
 	byte txBuffer[TELEMETRY_BUFFER_MAX_SIZE];
 	uint16_t pos = 0;
 	byte i, ack;
 	
+	// prepare header
+	for (i=0; i<PROT_REPEAT_HEADER;i++) txBuffer[pos++] =PROT_HEADER;
 	// copy datas
 	for (i=0; i<length;i++){
 		txBuffer[pos++] = data[i];
 	}	
+	// prepare footer
+	for (i=0; i<PROT_REPEAT_HEADER;i++) txBuffer[pos++] =PROT_FOOTER;
+	
 	#ifdef DEBUG
 		printTM(txBuffer, pos);
 	#endif
@@ -108,34 +184,7 @@ void freakyCampManagerStart() {
 }
 
 
-// function integrated in main loop, call every time when not in timer 1s called procedure
-void freakyCampManagerLoop(){
-	uint8_t rcode;
-	uint8_t msg[64] = { 0x00 };
-	const char* recv = "Received: "; 
 
-	//checkCampInputs();
-	Usb.Task();
-	if( adk.isReady() == false ) {
-		return;
-	}
-
-	uint16_t len = 64;
-   
-	rcode = adk.RcvData(&len, msg);
-	if( rcode & ( rcode != hrNAK )) {
-		USBTRACE2("Data rcv. :", rcode );
-	} 
-	if(len > 0) {
-		Serial.println("\r\nData Packet.");
-
-		for( uint8_t i = 0; i < len; i++ ) {
-			Serial.print((byte)msg[i]);
-		}
-	}
-	//else Serial.print(".");
-	delay(50);
-}
 
 void sendAllTelemetry(){
 	byte len;
