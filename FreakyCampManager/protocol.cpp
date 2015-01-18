@@ -88,19 +88,9 @@ void processReceivedCommand(byte* data, int length){
 	
 }
 
-byte tmPrepareHeader(byte* data){
-	byte i;
-	byte pos = 0;
-	for (i=0; i<PROT_REPEAT_HEADER;i++){
-		data[pos++] = PROT_HEADER;
-	}
-	return pos;
-}
-
-
 byte tmBuilderCurrent(byte* data){
 	byte i, msb, lsb;
-	byte p = tmPrepareHeader(data);
+	byte p = 0;
 	
 	data[p++] = TM_CURRENT;
 	
@@ -112,7 +102,7 @@ byte tmBuilderCurrent(byte* data){
 
 byte tmBuilderTension(byte* data){
 	byte i, msb, lsb;
-	byte p = tmPrepareHeader(data);
+	byte p = 0;
 	
 	data[p++] = TM_TENSION;
 	
@@ -141,7 +131,7 @@ byte formatTempData(float temp){
 
 // E.G. : 0x48 0xA6 0xA3 0xA3 0xA3 0xA4 0xA3 0xA4
 byte tmBuilderTemperature(byte* data){
-	byte p = tmPrepareHeader(data);
+	byte p = 0;
 	byte tempEncoded, i;
 
 	data[p++] = TM_TEMPERATURE;
@@ -155,7 +145,7 @@ byte tmBuilderTemperature(byte* data){
 }
 
 byte tmBuilderWater(byte* data){
-	byte p = tmPrepareHeader(data);
+	byte p = 0;
 	data[p++] = TM_WATER;
 	data[p++] = isPumpActive();
 	data[p++] = getCleanWaterLevel();
@@ -165,7 +155,7 @@ byte tmBuilderWater(byte* data){
 }
 
 byte tmBuilderSwitch(byte* data){
-	byte p = tmPrepareHeader(data);
+	byte p = 0;
 	byte i;
 	boolean sw = 0;
 	data[p++] = TM_SWITCH;
@@ -176,14 +166,14 @@ byte tmBuilderSwitch(byte* data){
 }
 
 byte tmBuilderLight(byte* data){
-	byte p = tmPrepareHeader(data);
+	byte p = 0;
 	
 	return p;
 }
 
 byte tmBuilderColdHot(byte* data){
-	byte p = tmPrepareHeader(data);
-
+	byte p = 0;
+	
 	return p;
 }
 
