@@ -19,14 +19,7 @@ void switchRelay(byte relayId, boolean status){
 	digitalWrite(relayId, status);
 }
 
-void lightCommand(byte lightId,byte dimm, byte red, byte green, byte blue){
-	
-}
 
-void lightOff(byte lightId)
-{
-	
-}
 
 boolean getRelayStatus(eElecRelays relayId){
 	return digitalRead(electricalLinesPins[relayId]);

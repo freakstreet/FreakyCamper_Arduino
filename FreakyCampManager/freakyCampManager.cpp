@@ -71,18 +71,18 @@ void freakyCampManagerLoop(){
 				headerCount = 0;
 				// if reached end of footer
 				if (footerCount == PROT_REPEAT_HEADER){
-					Serial.println("");
 					Serial.print("Got TC :");
 					for( uint8_t i = 0; i < rxCounter; i++ ) {
 						Serial.print(" 0x");
 						Serial.print(rxBuffer[i], HEX);
 					}
 					Serial.println("");
-					footerCount = 0;
-					readyForDatas = false;
 					
 					// TODO : handle TC commane
-					
+					processReceivedCommand(rxBuffer, rxCounter);
+
+					footerCount = 0;
+					readyForDatas = false;
 					rxCounter = 0;
 				}
 			}
@@ -99,6 +99,8 @@ void sendTM(byte length, byte* data){
 	byte txBuffer[TELEMETRY_BUFFER_MAX_SIZE];
 	uint16_t pos = 0;
 	byte i, ack;
+	
+	if (length==0) return;
 	
 	// prepare header
 	for (i=0; i<PROT_REPEAT_HEADER;i++) txBuffer[pos++] =PROT_HEADER;
@@ -117,7 +119,7 @@ void sendTM(byte length, byte* data){
 		if (hrSUCCESS == ack)
 			Serial.println("ok");
 		else {
-			Serial.print("USB error, code 0x");
+			Serial.print("USB error 0x");
 			Serial.println(ack, HEX);
 		}
 	#endif
@@ -171,7 +173,7 @@ void freakyCampManagerStart() {
 	#ifdef DEBUG
 		Serial.println("Init timer1");
 	#endif
-	Timer1.initialize(1000000); 		// 1000000 µs --> 1s
+	Timer1.initialize(2000000); 		// 1000000 µs --> 1s
 	Timer1.attachInterrupt( timerIsr ); // attach the service routine here
 	#ifdef DEBUG
 		Serial.println("done timer");
@@ -190,18 +192,18 @@ void sendAllTelemetry(){
 	byte len;
 	len = tmBuilderTemperature(txBuffer);
 	sendTM(len, txBuffer);
-/*	len = tmBuilderSwitch(txBuffer);
-	sendTM(len, txBuffer);
+	len = tmBuilderSwitch(txBuffer);
+//	sendTM(len, txBuffer);
 	len = tmBuilderTension(txBuffer);
-	sendTM(len, txBuffer);
+//	sendTM(len, txBuffer);
 	len = tmBuilderCurrent(txBuffer);
-	sendTM(len, txBuffer);	
+//	sendTM(len, txBuffer);	
 	len = tmBuilderWater(txBuffer);
-	sendTM(len, txBuffer);
-	len = tmBuilderLight(txBuffer);
+//	sendTM(len, txBuffer);
+	len = tmBuilderLight(txBuffer, 0);
 	sendTM(len, txBuffer);
 	len = tmBuilderColdHot(txBuffer);
-	sendTM(len, txBuffer);*/
+//	sendTM(len, txBuffer);
 }
 
 

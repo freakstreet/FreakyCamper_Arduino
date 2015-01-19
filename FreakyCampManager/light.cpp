@@ -5,20 +5,52 @@
 void initLightFunction() {
 	// init lights commands
 	byte i, pin;
-	for (i=0; i<NB_INPUT_SWITCHS; i++)
+	for (i=0; i<NB_LIGHTS; i++)
 	{
-		pin = lightsConf[i][1];
-		pinMode(pin, OUTPUT);
-		digitalWrite(pin, LOW);
+		switch (lightsConf[i][LIGHT_TYPE]) {
+			case LIGHT_TYPE_NORMAL :
+				pinMode(lightsConf[i][LIGHT_POUT_R], OUTPUT);
+				digitalWrite(lightsConf[i][LIGHT_POUT_R], LOW);
+				break;
+			case LIGHT_TYPE_DIMMABLE :
+				pinMode(lightsConf[i][LIGHT_POUT_R], OUTPUT);
+				analogWrite(lightsConf[i][LIGHT_POUT_R], LOW);
+				break;
+
+			case LIGHT_TYPE_RGB_DIMMABLE :
+				pinMode(lightsConf[i][LIGHT_POUT_R], OUTPUT);
+				digitalWrite(lightsConf[i][LIGHT_POUT_R], LOW);
+				pinMode(lightsConf[i][LIGHT_POUT_G], OUTPUT);
+				digitalWrite(lightsConf[i][LIGHT_POUT_G], LOW);
+				pinMode(lightsConf[i][LIGHT_POUT_B], OUTPUT);
+				digitalWrite(lightsConf[i][LIGHT_POUT_B], LOW);
+			break;
+		}
+	}
+}
+
+void lightCommand(byte lightId, byte dim, byte red, byte green, byte blue){
+	if (lightsConf[lightId][LIGHT_TYPE] == LIGHT_TYPE_DIMMABLE)
+		setLightDimmedRGBValue(lightId, dim, 0, 0, 0);
+	else
+		setLightDimmedRGBValue(lightId, dim, red, green, blue);
+}
+
+void lightOnOff(byte lightId, byte status)
+{
+	byte st = lightsConf[lightId][LIGHT_STAT_DIMM];
+	if (st != status)
+	{
+		digitalWrite(lightsConf[lightId][LIGHT_POUT_R], status>0);
+		lightsConf[lightId][LIGHT_STAT_DIMM] = status;
 	}
 }
 
 void setLightDimmedRGBValue(byte lightId, byte dim, byte r, byte g, byte b){
 	// get LED strip pins
-	
-	analogWrite(lightsConf[lightId][3], r * dim/256);
-	analogWrite(lightsConf[lightId][4], g * dim/256);
-	analogWrite(lightsConf[lightId][5], b * dim/256);
+	analogWrite(lightsConf[lightId][LIGHT_POUT_R], r * dim/256);
+	analogWrite(lightsConf[lightId][LIGHT_POUT_G], g * dim/256);
+	analogWrite(lightsConf[lightId][LIGHT_POUT_B], b * dim/256);
 }
 
 long HSV_to_RGB( float h, float s, float v ) {

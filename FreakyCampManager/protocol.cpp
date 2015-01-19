@@ -3,6 +3,7 @@
 #include "electrical.h"
 #include "current.h"
 #include "water.h"
+#include "light.h"
 
 #include "temperatureSensors.h"
 
@@ -18,70 +19,62 @@ void processReceivedCommand(byte* data, int length){
 		printTC(data, length);
 	#endif
 	
-	if (length < 2+PROT_REPEAT_HEADER) {
-		#ifdef DEBUG
-			Serial.println("ERROR: processManagedFrame:insufficient data length -> skip data processiing");
-		#endif
-		return;
-	}
-	
-	for (i=0; i<PROT_REPEAT_HEADER; i++){
-		if (data[pData++] != PROT_HEADER){
-			#ifdef DEBUG
-				Serial.print("ERROR: processManagedFrame: header not recognised, symbol 0x");
-				Serial.print(PROT_HEADER, HEX);
-				Serial.print(" repeated ");
-				Serial.print(pData);
-				Serial.println(" times");
-			#endif
-			return;
-		}
-	}
-
-	#ifdef DEBUG
-	Serial.println("Header check passed");
-	Serial.print("Received command [");
-	Serial.print(data[pData]);
-	Serial.println(" ");
-	#endif
-	
 	switch((byte)data[pData]){
 		case PROT_SWITCH_COLD_MODULE :
+			Serial.print("TC Switch Cold: ");
 			switchRelay(POUT_RELAY_FRIDGE, data[pData+1]==1);
+			Serial.println("");
 			break;
 		
 		case PROT_SWITCH_WATER_MODULE :
+			Serial.print("TC Switch Water: ");
 			switchRelay(POUT_RELAY_WATER, data[pData+1]==1);	
+			Serial.println("");
 			break;
 		
 		case PROT_SWITCH_HEAT_MODULE :
+			Serial.print("TC Switch Heat:");
 			switchRelay(POUT_RELAY_HEATING, data[pData+1]==1);
+			Serial.println("");
 			break;
 		
 		case PROT_SWITCH_LIGHT_MODULE :
-			if (length < 8) {
-				#ifdef DEBUG
+			Serial.println("TC Light :");
+			if (length < 7) {
+				//#ifdef DEBUG
 					Serial.println("ERROR: processManagedFrame.PROT_SWITCH_LIGHT_MODULE:insufficient data length -> skip data processiing");
-				#endif
+				//#endif
+				Serial.println("");
 				return;
 			}
-			if (data[pData+1]==0) lightOff(data[pData+2]);
-			else lightCommand(data[pData+2],data[pData+3],data[pData+4],data[pData+5],data[pData+6]);
+			if (data[pData+1]==LIGHT_TYPE_NORMAL) 
+				lightOnOff(data[pData+2], data[pData+3]);
+			else 
+				lightCommand(data[pData+2],data[pData+3],data[pData+4],data[pData+5], data[pData+6]);
+			Serial.println("");
 			break;
 		
 		case PROT_SWITCH_AUX_MODULE :
+			Serial.print("TC Switch AUX: ");
 			switchRelay(POUT_RELAY_AUX, data[pData+1]==1);
+			Serial.println("");
 			break;
 		
 		case PROT_SWITCH_SPARE_MODULE :
+			Serial.print("TC Switch spare:");
 			switchRelay(POUT_RELAY_SPARE, data[pData+1]==1);
+			Serial.println("");
 			break;
 		
 		case PROT_COLD_CONSIGNE :
+			Serial.print("TC Cold:");
 			//setFridgeTempConsigne(data[pData+1]);
+			Serial.println("");
 			break;
 		
 		case PROT_HEATER :
+			Serial.print("TC Heater: ");
+			Serial.println("");
 			break;
 	
 	}
@@ -94,9 +87,10 @@ byte tmBuilderCurrent(byte* data){
 	
 	data[p++] = TM_CURRENT;
 	
-	for (i=0;i<NB_CURRENT_SENSORS; i++)
+	for (i=0;i<NB_CURRENT_SENSORS; i++){
 		data[p++] = highByte(currents[i]); 
 		data[p++] = lowByte(currents[i]);
+	}
 	return p;
 }
 
@@ -106,9 +100,10 @@ byte tmBuilderTension(byte* data){
 	
 	data[p++] = TM_TENSION;
 	
-	for (i=0;i<NB_TENSION_SENSORS; i++)
+	for (i=0;i<NB_TENSION_SENSORS; i++){
 		data[p++] = highByte(tensions[i]); 
 		data[p++] = lowByte(tensions[i]);
+	}
 	return p;
 }
 /*//////////////////////////////////////////////////////////////////////////////
@@ -165,9 +160,16 @@ byte tmBuilderSwitch(byte* data){
 	return p;
 }
 
-byte tmBuilderLight(byte* data){
+byte tmBuilderLight(byte* data, byte lightId){
 	byte p = 0;
-	
+	byte i;
+	data[p++] = TM_LIGHT;
+	data[p++] = lightId;
+	data[p++] = lightsConf[lightId][LIGHT_TYPE];
+	data[p++] = lightsConf[lightId][LIGHT_STAT_DIMM];
+	data[p++] = lightsConf[lightId][LIGHT_STAT_R];
+	data[p++] = lightsConf[lightId][LIGHT_STAT_G];
+	data[p++] = lightsConf[lightId][LIGHT_STAT_B];
 	return p;
 }
 

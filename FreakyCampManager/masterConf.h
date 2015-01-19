@@ -102,6 +102,8 @@ extern short tensions[];
 //*****************************************************************************************************
 //						LIGHTS MODULE
 //*****************************************************************************************************
+#define		NB_LIGHTS				2
+
 #define		POUT_LIGHT_SSD_1			36	//	http://www.seeedstudio.com/depot/Flexible-LED-Strip-White-p-1122.html?cPath=81_79
 #define		POUT_LIGHT_SSD_2			37
 //#define		POUT_LIGHT_SSD_3			38
@@ -109,6 +111,16 @@ extern short tensions[];
 #define		POUT_LIGHT_RGB_1_R		5
 #define		POUT_LIGHT_RGB_1_G		6
 #define		POUT_LIGHT_RGB_1_B		7
+
+#define	LIGHT_PIN_SW		0
+#define	LIGHT_TYPE		1
+#define	LIGHT_POUT_R		2
+#define	LIGHT_POUT_G		3
+#define	LIGHT_POUT_B		4
+#define	LIGHT_STAT_DIMM	5
+#define 	LIGHT_STAT_R		6
+#define 	LIGHT_STAT_G		7
+#define 	LIGHT_STAT_B		8
 
 typedef enum eLightTypes {
 	LIGHT_TYPE_NORMAL,
@@ -137,7 +149,7 @@ typedef enum eSwitchId{
 	SWITCH_BUTTON_LIGHT_4 = 3
 };
 
-extern byte lightsConf[][5];
+extern byte lightsConf[][9];
 extern Button* inputSwitchs[];
 
 

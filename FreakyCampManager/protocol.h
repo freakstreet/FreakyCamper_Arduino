@@ -33,7 +33,7 @@
 #define	TM_CURRENT		70
 #define	TM_TENSION		71
 #define	TM_TEMPERATURE	72
-#define	TM_WATER			73
+#define	TM_WATER		73
 #define	TM_SWITCH		74
 #define	TM_LIGHT			75
 #define	TM_COLD_HOT		76
@@ -51,7 +51,7 @@ byte tmBuilderTension(byte* data);
 byte tmBuilderTemperature(byte* data);
 byte tmBuilderWater(byte* data);
 byte tmBuilderSwitch(byte* data);
-byte tmBuilderLight(byte* data);
+byte tmBuilderLight(byte* data, byte lightId);
 byte tmBuilderColdHot(byte* data);
 
 void printTM(byte* data, byte length);

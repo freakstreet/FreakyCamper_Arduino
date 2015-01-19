@@ -18,13 +18,13 @@ DeviceAddress TempProbes[] = {
 	/* Sensor #3 */ {0x28,0x79,0x87,0xDA,0x2,0x0,0x0,0xDF },		//	TEMP_WATER_PRIMARY 
 	/* Sensor #4 */ {0x28,0x15,0x58,0xC4,0x3,0x0,0x0,0xD6 }, 		//	TEMP_WATER_SECONDARY
 	/* Sensor #5 */ {0x28,0x93,0xB1,0x9C,0x4,0x0,0x0,0x19 }, 		//	TEMP_HEAT_BLOWER
-	/* Sensor #6 */ {0x28,0x53,0xEB,0x9C,0x4,0x0,0x0,0xAE }		//	TEMP_OUTSIDE
+	/* Sensor #6 */ {0x28,0x53,0xEB,0x9C,0x4,0x0,0x0,0xAE }			//	TEMP_OUTSIDE
 };
 
-byte lightsConf[][5] = {
-	{PINT_LIGHT_SWITCH_1,	LIGHT_TYPE_NORMAL, 		POUT_LIGHT_SSD_1, 	0, 					0					},
-	{PINT_LIGHT_SWITCH_2,	LIGHT_TYPE_NORMAL, 		POUT_LIGHT_SSD_2, 	0, 					0					},
-	{PINT_LIGHT_SWITCH_3,	LIGHT_TYPE_RGB_DIMMABLE, 	POUT_LIGHT_RGB_1_R, 	POUT_LIGHT_RGB_1_G, 	POUT_LIGHT_RGB_1_B	}
+byte lightsConf[][9] = {
+	{PINT_LIGHT_SWITCH_1,	LIGHT_TYPE_NORMAL, 		POUT_LIGHT_SSD_1, 	0, 					0,					0,	0,	0,	0	},
+	{PINT_LIGHT_SWITCH_2,	LIGHT_TYPE_NORMAL, 		POUT_LIGHT_SSD_2, 	0, 					0,					0,	0,	0,	0	},
+	{PINT_LIGHT_SWITCH_3,	LIGHT_TYPE_RGB_DIMMABLE, 	POUT_LIGHT_RGB_1_R, 	POUT_LIGHT_RGB_1_G, 	POUT_LIGHT_RGB_1_B,	0,	0,	0,	0	}
 };
 
 Button* inputSwitchs[NB_INPUT_SWITCHS] ;

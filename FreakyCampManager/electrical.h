@@ -8,8 +8,7 @@ void initElectricalFunction();
 
 void switchRelay(byte relayId, boolean status);
 
-void lightCommand(byte lightId,byte dimm, byte red, byte green, byte blue);
-void lightOff(byte lightId);
+
 boolean getRelayStatus(eElecRelays relayId);
 		
 
