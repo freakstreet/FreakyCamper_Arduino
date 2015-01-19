@@ -3,6 +3,10 @@
 byte waterFlowLitersMin;
 long flowSensorIntsCount;
 
+void poolWaterInfos(){
+	// Do nothing, 
+}
+
 void onWaterFlowSensorInterrupt()
 {
 	flowSensorIntsCount++;

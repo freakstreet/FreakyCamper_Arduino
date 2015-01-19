@@ -7,34 +7,47 @@
 
 #include "temperatureSensors.h"
 
+byte watchdog = 0;
 
 byte rxBuffer[TELEMETRY_BUFFER_MAX_SIZE];
 byte txBuffer[TELEMETRY_BUFFER_MAX_SIZE];
 
+byte tmBuilderIsAlive(){
+	byte p = 0;
+	txBuffer[p++] = TM_IS_ALIVE;
+	return p;
+}
 
-void processReceivedCommand(byte* data, int length){
+void processReceivedCommand(int length){
 	int pData = 0;
 	int i;
 	#ifdef DEBUG
 		printTC(data, length);
 	#endif
 	
-	switch((byte)data[pData]){
+	switch((byte)rxBuffer[pData]){
+		case PROT_KEEP_ALIVE :
+			Serial.print("TC keep alive.");
+			watchdog = 0;
+			i = tmBuilderIsAlive();
+			sendTM(i);
+			break;
+			
 		case PROT_SWITCH_COLD_MODULE :
 			Serial.print("TC Switch Cold: ");
-			switchRelay(POUT_RELAY_FRIDGE, data[pData+1]==1);
+			switchRelay(POUT_RELAY_FRIDGE, rxBuffer[pData+1]==1);
 			Serial.println("");
 			break;
 		
 		case PROT_SWITCH_WATER_MODULE :
 			Serial.print("TC Switch Water: ");
-			switchRelay(POUT_RELAY_WATER, data[pData+1]==1);	
+			switchRelay(POUT_RELAY_WATER, rxBuffer[pData+1]==1);	
 			Serial.println("");
 			break;
 		
 		case PROT_SWITCH_HEAT_MODULE :
 			Serial.print("TC Switch Heat:");
-			switchRelay(POUT_RELAY_HEATING, data[pData+1]==1);
+			switchRelay(POUT_RELAY_HEATING, rxBuffer[pData+1]==1);
 			Serial.println("");
 			break;
 		
@@ -47,22 +60,22 @@ void processReceivedCommand(byte* data, int length){
 				Serial.println("");
 				return;
 			}
-			if (data[pData+1]==LIGHT_TYPE_NORMAL) 
-				lightOnOff(data[pData+2], data[pData+3]);
+			if (rxBuffer[pData+1]==LIGHT_TYPE_NORMAL) 
+				lightOnOff(rxBuffer[pData+2], rxBuffer[pData+3]);
 			else 
-				lightCommand(data[pData+2],data[pData+3],data[pData+4],data[pData+5], data[pData+6]);
+				lightCommand(rxBuffer[pData+2],rxBuffer[pData+3],rxBuffer[pData+4],rxBuffer[pData+5], rxBuffer[pData+6]);
 			Serial.println("");
 			break;
 		
 		case PROT_SWITCH_AUX_MODULE :
 			Serial.print("TC Switch AUX: ");
-			switchRelay(POUT_RELAY_AUX, data[pData+1]==1);
+			switchRelay(POUT_RELAY_AUX, rxBuffer[pData+1]==1);
 			Serial.println("");
 			break;
 		
 		case PROT_SWITCH_SPARE_MODULE :
 			Serial.print("TC Switch spare:");
-			switchRelay(POUT_RELAY_SPARE, data[pData+1]==1);
+			switchRelay(POUT_RELAY_SPARE, rxBuffer[pData+1]==1);
 			Serial.println("");
 			break;
 		
@@ -81,28 +94,28 @@ void processReceivedCommand(byte* data, int length){
 	
 }
 
-byte tmBuilderCurrent(byte* data){
+byte tmBuilderCurrent(){
 	byte i, msb, lsb;
 	byte p = 0;
 	
-	data[p++] = TM_CURRENT;
+	txBuffer[p++] = TM_CURRENT;
 	
 	for (i=0;i<NB_CURRENT_SENSORS; i++){
-		data[p++] = highByte(currents[i]); 
-		data[p++] = lowByte(currents[i]);
+		txBuffer[p++] = highByte(currents[i]); 
+		txBuffer[p++] = lowByte(currents[i]);
 	}
 	return p;
 }
 
-byte tmBuilderTension(byte* data){
+byte tmBuilderTension(){
 	byte i, msb, lsb;
 	byte p = 0;
 	
-	data[p++] = TM_TENSION;
+	txBuffer[p++] = TM_TENSION;
 	
 	for (i=0;i<NB_TENSION_SENSORS; i++){
-		data[p++] = highByte(tensions[i]); 
-		data[p++] = lowByte(tensions[i]);
+		txBuffer[p++] = highByte(tensions[i]); 
+		txBuffer[p++] = lowByte(tensions[i]);
 	}
 	return p;
 }
@@ -125,55 +138,55 @@ byte formatTempData(float temp){
 }
 
 // E.G. : 0x48 0xA6 0xA3 0xA3 0xA3 0xA4 0xA3 0xA4
-byte tmBuilderTemperature(byte* data){
+byte tmBuilderTemperature(){
 	byte p = 0;
 	byte tempEncoded, i;
 
-	data[p++] = TM_TEMPERATURE;
+	txBuffer[p++] = TM_TEMPERATURE;
 	
 	for (i=0;i<NB_TEMP_SENSORS; i++) {
 		tempEncoded = formatTempData(getTemperatureFromIndex(i));
-		data[p++] = tempEncoded;
+		txBuffer[p++] = tempEncoded;
 	}
 	
 	return p;
 }
 
-byte tmBuilderWater(byte* data){
+byte tmBuilderWater(){
 	byte p = 0;
-	data[p++] = TM_WATER;
-	data[p++] = isPumpActive();
-	data[p++] = getCleanWaterLevel();
-	data[p++] = isDarkWaterTankFull();
-	data[p++] = waterFlowLitersMin;
+	txBuffer[p++] = TM_WATER;
+	txBuffer[p++] = isPumpActive();
+	txBuffer[p++] = getCleanWaterLevel();
+	txBuffer[p++] = isDarkWaterTankFull();
+	txBuffer[p++] = waterFlowLitersMin;
 	return p;
 }
 
-byte tmBuilderSwitch(byte* data){
+byte tmBuilderSwitch(){
 	byte p = 0;
 	byte i;
 	boolean sw = 0;
-	data[p++] = TM_SWITCH;
+	txBuffer[p++] = TM_SWITCH;
 	for (i=0;i<NB_ELEC_SWITCHES; i++) {
-		data[p++] = (getRelayStatus((eElecRelays)i)?1:0);
+		txBuffer[p++] = (getRelayStatus((eElecRelays)i)?1:0);
 	}
 	return p;
 }
 
-byte tmBuilderLight(byte* data, byte lightId){
+byte tmBuilderLight(byte lightId){
 	byte p = 0;
 	byte i;
-	data[p++] = TM_LIGHT;
-	data[p++] = lightId;
-	data[p++] = lightsConf[lightId][LIGHT_TYPE];
-	data[p++] = lightsConf[lightId][LIGHT_STAT_DIMM];
-	data[p++] = lightsConf[lightId][LIGHT_STAT_R];
-	data[p++] = lightsConf[lightId][LIGHT_STAT_G];
-	data[p++] = lightsConf[lightId][LIGHT_STAT_B];
+	txBuffer[p++] = TM_LIGHT;
+	txBuffer[p++] = lightId;
+	txBuffer[p++] = lightsConf[lightId][LIGHT_TYPE];
+	txBuffer[p++] = lightsConf[lightId][LIGHT_STAT_DIMM];
+	txBuffer[p++] = lightsConf[lightId][LIGHT_STAT_R];
+	txBuffer[p++] = lightsConf[lightId][LIGHT_STAT_G];
+	txBuffer[p++] = lightsConf[lightId][LIGHT_STAT_B];
 	return p;
 }
 
-byte tmBuilderColdHot(byte* data){
+byte tmBuilderColdHot(){
 	byte p = 0;
 	
 	return p;
@@ -187,19 +200,19 @@ void printDatas(byte* data, byte length){
 		Serial.print(data[i], HEX);
 		Serial.print(" ");
 	}
+	Serial.println(".");
 }
 
-void printTM(byte* data, byte length){
+void printTM(byte length){
 	byte i;
 	Serial.print("TM: ");
-	printDatas(data, length);
+	printDatas(txBuffer, length);
 }
 
-void printTC(byte* data, byte length){
+void printTC(byte length){
 	byte i;
 	Serial.print("TC: ");
-	printDatas(data, length);
-	Serial.println(".");
+	printDatas(rxBuffer, length);
 }
 
 

@@ -12,6 +12,7 @@
 #include "light.h"
 #include "current.h"
 #include "tension.h"
+#include "water.h"
 
 #define DEBUG
 
@@ -28,6 +29,30 @@ byte rxCounter = 0;
 byte headerCount = 0;
 byte footerCount = 0;
 boolean readyForDatas = false;
+
+/*	USB Error codes list
+TODO : manage each error type to handle eliable USB link
+----------------------------------------------------------------------------------------------
+	HSRLT  |	Label	|	Meaning
+----------------------------------------------------------------------------------------------
+	0x00	hrSUCCESS 	Successful Transfer
+	0x01	hrBUSY 		SIE is busy, transfer pending
+	0x02	hrBADREQ	Bad value in HXFR reg
+	0x03	hrUNDEF	(reserved)
+*	0x04	hrNAK		Peripheral returned NAK
+	0x05	hrSTALL		Perpheral returned STALL
+	0x06	hrTOGERR	Toggle error/ISO over-underrun
+*	0x07	hrWRONGPID	Received the wrong PID
+	0x08	hrBADBC		Bad byte count
+*	0x09	hrPIDERR	Receive PID is corrupted
+	0x0A	hrPKTERR	Packet error (stuff, EOP)
+	0x0B	hrCRCERR	CRC error
+	0x0C	hrKERR		K-state instead of response
+	0x0D	hrJERR		J-state instead of response
+	0x0E	hrTIMEOUT	Device did not respond in time
+	0x0F	hrBABBLE	Device talked too long
+
+*/
 
 
 // function integrated in main loop, call every time when not in timer 1s called procedure
@@ -49,13 +74,7 @@ void freakyCampManagerLoop(){
 		USBTRACE2("Data rcv. :", rcode );
 	} 
 	if(len > 0) {
-		/*
-		Serial.println("\r\nData Packet.");
-		for( uint8_t i = 0; i < len; i++ ) {
-			Serial.print("0x");
-			Serial.print((byte)msg[i], HEX);
-		}*/
-		
+
 		if (len == 1){
 			// check data value
 			if (msg[0] == PROT_HEADER) {
@@ -77,10 +96,10 @@ void freakyCampManagerLoop(){
 						Serial.print(rxBuffer[i], HEX);
 					}
 					Serial.println("");
-					
-					// TODO : handle TC commane
-					processReceivedCommand(rxBuffer, rxCounter);
 
+					processReceivedCommand(rxCounter);
+
+					watchdog = 0;
 					footerCount = 0;
 					readyForDatas = false;
 					rxCounter = 0;
@@ -91,38 +110,94 @@ void freakyCampManagerLoop(){
 				
 		}
 	}
-	//else Serial.print(".");
 	delay(25);
 }
+
+void handleUsbError(byte ack){
+	switch (ack){
+
+		case hrBUSY :
+			break;
+
+		case hrBADREQ :
+			break;
+
+		case hrUNDEF :
+			break;
+
+		case hrNAK :
+			break;
+
+		case hrSTALL :
+			break;
+
+		case hrTOGERR :
+			break;
+
+		case hrWRONGPID :	// PID error, wrong or corrupted --> reset device
+		case hrPIDERR :
+				adk.Release();
+			break;
+
+		case hrBADBC :
+			break;
+
+
+		case hrPKTERR :
+			break;
+
+		case hrCRCERR :
+			break;
+
+		case hrKERR :
+			break;
+
+		case hrJERR :
+			break;
+
+		case hrTIMEOUT :
+			break;
+
+		case hrBABBLE :
+			break;
+
+	}
+}
 	    
-void sendTM(byte length, byte* data){
-	byte txBuffer[TELEMETRY_BUFFER_MAX_SIZE];
+void sendTM(byte length){
+
 	uint16_t pos = 0;
 	byte i, ack;
 	
 	if (length==0) return;
 	
 	// prepare header
-	for (i=0; i<PROT_REPEAT_HEADER;i++) txBuffer[pos++] =PROT_HEADER;
+	for (i=0; i<PROT_REPEAT_HEADER;i++) 
+		txBuffer[pos++] =PROT_HEADER;
 	// copy datas
-	for (i=0; i<length;i++){
-		txBuffer[pos++] = data[i];
-	}	
+	for (i=0; i<length;i++)
+		txBuffer[pos++] = txBuffer[i];
+		
 	// prepare footer
-	for (i=0; i<PROT_REPEAT_HEADER;i++) txBuffer[pos++] =PROT_FOOTER;
+	for (i=0; i<PROT_REPEAT_HEADER;i++) 
+		txBuffer[pos++] =PROT_FOOTER;
+	
+	ack = adk.SndData(pos, txBuffer);
 	
 	#ifdef DEBUG
-		printTM(txBuffer, pos);
-	#endif
-	ack = adk.SndData(pos, txBuffer);
-	#ifdef DEBUG
-		if (hrSUCCESS == ack)
+		printTM(pos);
+		if (hrSUCCESS == ack){
 			Serial.println("ok");
+			watchdog = 0;
+		}
 		else {
 			Serial.print("USB error 0x");
 			Serial.println(ack, HEX);
 		}
 	#endif
+		
+	if (hrSUCCESS != ack)
+		handleUsbError(ack);
 }
 
 /*
@@ -158,7 +233,6 @@ void freakyCampManagerStart() {
 		Serial.println("done light");
 	#endif
 	
-	
 	// Init temp sensors
 	#ifdef DEBUG
 		Serial.println("Init temp sensors");
@@ -168,19 +242,17 @@ void freakyCampManagerStart() {
 		Serial.println("done temp");
 	#endif
 	
-	
 	// Init 1 sec timer for pooling events
 	#ifdef DEBUG
 		Serial.println("Init timer1");
 	#endif
-	Timer1.initialize(2000000); 		// 1000000 µs --> 1s
+	Timer1.initialize(1000000*PROT_TM_CYCLE_SEC); 		// 1000000 µs --> 1s
 	Timer1.attachInterrupt( timerIsr ); // attach the service routine here
 	#ifdef DEBUG
 		Serial.println("done timer");
 		Serial.println("Starting timer1");
 	#endif
-	//Timer1.start();
-	
+
 	// activate interruptions
 	sei();
 }
@@ -190,20 +262,20 @@ void freakyCampManagerStart() {
 
 void sendAllTelemetry(){
 	byte len;
-	len = tmBuilderTemperature(txBuffer);
-	sendTM(len, txBuffer);
-	len = tmBuilderSwitch(txBuffer);
-//	sendTM(len, txBuffer);
-	len = tmBuilderTension(txBuffer);
-//	sendTM(len, txBuffer);
-	len = tmBuilderCurrent(txBuffer);
-//	sendTM(len, txBuffer);	
-	len = tmBuilderWater(txBuffer);
-//	sendTM(len, txBuffer);
-	len = tmBuilderLight(txBuffer, 0);
-	sendTM(len, txBuffer);
-	len = tmBuilderColdHot(txBuffer);
-//	sendTM(len, txBuffer);
+	len = tmBuilderTemperature();
+	sendTM(len);
+	len = tmBuilderSwitch();
+	sendTM(len);
+	len = tmBuilderTension();
+	sendTM(len);
+	len = tmBuilderCurrent();
+	sendTM(len);	
+	len = tmBuilderWater();
+//	sendTM(len);
+	len = tmBuilderLight(0);
+	sendTM(len);
+	len = tmBuilderColdHot();
+//	sendTM(len);
 }
 
 
@@ -216,9 +288,17 @@ void campManagerPool(){
 	getInputs();
 	
 	sendAllTelemetry();
+	
+	watchdog++;
+	if (watchdog > PROT_WATCHDOG_MAX_SEC/PROT_TM_CYCLE_SEC){
+		// start reset USB connection
+		
+		watchdog = 0;
+	}
 }
 
 void getWaterInfos() {
+	poolWaterInfos();
 }
 
 void getTemperatures() {
@@ -234,23 +314,6 @@ void	getTensions() {
 }
 
 void	getInputs() {
-}
-
-void freakyCampUSBPool(){
-	uint16_t len = 0;
-	uint8_t rcode;
-	const char* recv = "Received: "; 
-
-	Usb.Task();
-
-	if( adk.isReady() == false ) {
-		return;
-	}
-	//uint8_t RcvData(uint16_t *nbytesptr, uint8_t *dataptr);
-	rcode = adk.RcvData(&len, &rxBuffer[0]);
-	if( rcode & len > 0) {
-		processReceivedCommand(rxBuffer, len);
-	}
 }
 
 /// --------------------------

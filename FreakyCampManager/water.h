@@ -8,6 +8,7 @@
 extern byte waterFlowLitersMin;
 extern long flowSensorIntsCount;
 
+void poolWaterInfos();
 
 void initWaterModule();
 byte getCleanWaterLevel();            		// 0 (empty) to 100 (full)
