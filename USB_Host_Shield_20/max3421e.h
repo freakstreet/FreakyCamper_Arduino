@@ -209,22 +209,22 @@ e-mail   :  support@circuitsathome.com
 #define bmSE1       0xc0    //SE1 - illegal state
 
 /* Host error result codes, the 4 LSB's in the HRSL register */
-#define hrSUCCESS   0x00
-#define hrBUSY      0x01
-#define hrBADREQ    0x02
-#define hrUNDEF     0x03
-#define hrNAK       0x04
-#define hrSTALL     0x05
-#define hrTOGERR    0x06
-#define hrWRONGPID  0x07
-#define hrBADBC     0x08
-#define hrPIDERR    0x09
-#define hrPKTERR    0x0A
-#define hrCRCERR    0x0B
-#define hrKERR      0x0C
-#define hrJERR      0x0D
-#define hrTIMEOUT   0x0E
-#define hrBABBLE    0x0F
+#define	hrSUCCESS 	0x00	//	Successful Transfer
+#define	hrBUSY 		0x01	//	SIE is busy, transfer pending
+#define	hrBADREQ	0x02	//	Bad value in HXFR reg
+#define	hrUNDEF		0x03	//	(reserved)
+#define	hrNAK		0x04	//	Peripheral returned NAK
+#define	hrSTALL		0x05	//	Perpheral returned STALL
+#define	hrTOGERR	0x06	//	Toggle error/ISO over-underrun
+#define	hrWRONGPID	0x07	//	Received the wrong PID
+#define	hrBADBC		0x08	//	Bad byte count
+#define	hrPIDERR		0x09	//	Receive PID is corrupted
+#define	hrPKTERR		0x0A	//	Packet error (stuff, EOP)
+#define	hrCRCERR		0x0B	//	CRC error
+#define	hrKERR		0x0C	//	K-state instead of response
+#define	hrJERR		0x0D	//	J-state instead of response
+#define	hrTIMEOUT	0x0E	//	Device did not respond in time
+#define	hrBABBLE		0x0F	//	Device talked too long
 
 #define MODE_FS_HOST    (bmDPPULLDN|bmDMPULLDN|bmHOST|bmSOFKAENAB)
 #define MODE_LS_HOST    (bmDPPULLDN|bmDMPULLDN|bmHOST|bmLOWSPEED|bmSOFKAENAB)
