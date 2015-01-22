@@ -16,7 +16,13 @@ void waterModuleInit()
 {
 	waterFlowLitersMin = 0;
 	flowSensorIntsCount = 0;
-	
+	// pin activate tank level sensing set to out and 0v
+	pinMode(PIO_WATER_ACTIVATE_SENSING, OUTPUT);
+	digitalWrite(PIO_WATER_ACTIVATE_SENSING, LOW);
+	// sensing pin set to output and set to 0v
+	pinMode(TANK_WATER_LEVEL_INPUT, OUTPUT);
+	digitalWrite(TANK_WATER_LEVEL_INPUT, LOW);
+		
 	// Init interruptions
 	pinMode(PINT_WATER_FLOW_OUT,INPUT);  //initializes digital pin as an input
 	attachInterrupt(0, onWaterFlowSensorInterrupt,RISING);  
@@ -32,7 +38,21 @@ byte isDarkWaterTankFull()
 byte getCleanWaterLevel()
 {
 	byte res;
-	int meas = analogRead(TANK_WATER_LEVEL_INPUT);
+	// activate measuring pin
+	digitalWrite(PIO_WATER_ACTIVATE_SENSING, HIGH);
+	
+	// measure several times 
+	int meas = 0;
+	for (int i=0; i<5; i++) 
+		meas += analogRead(TANK_WATER_LEVEL_INPUT);
+	meas = meas / 5;
+	
+	// desactivate sensor function
+	digitalWrite(PIO_WATER_ACTIVATE_SENSING, LOW);
+	pinMode(TANK_WATER_LEVEL_INPUT, OUTPUT);
+	digitalWrite(TANK_WATER_LEVEL_INPUT, LOW);
+	
+	
 	if (meas-TANK_WATER_LEVEL_OFFSET<0)
 		meas = TANK_WATER_LEVEL_OFFSET;
 	

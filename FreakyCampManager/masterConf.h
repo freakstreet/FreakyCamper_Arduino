@@ -157,6 +157,7 @@ extern Button* inputSwitchs[];
 //						WATER MODULE
 //*****************************************************************************************************
 #define	PINT_WATER_FLOW_OUT			18	//	INT	http://www.seeedstudio.com/depot/G1-Water-Flow-Sensor-p-1671.html?cPath=25
+#define	PIO_WATER_ACTIVATE_SENSING	32
 
 #define	TANK_WATER_LEVEL_INPUT		A10
 #define 	TANK_WATER_LEVEL_FACTOR		0.229
@@ -170,8 +171,6 @@ extern Button* inputSwitchs[];
 #define		CONST_FLOW_SENSOR_FACTOR 	5.5
 
 #define		PIN_WATER_SWITCH_EVIER	31
-//#define		PIN_WATER_SWITCH_SHOWER	32		-> no switch output
-
 
 
 
