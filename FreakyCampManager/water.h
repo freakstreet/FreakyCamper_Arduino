@@ -20,6 +20,7 @@ unsigned long getPumpConsoMa();      	// returns the water pump conso in miliAmp
 
 boolean isEvierOpened();
 boolean isShowerOpened();
+void setHotWaterMode(boolean mode); 
 
 void onWaterFlowTimer();			// to call each second to compute the water flow measured
 

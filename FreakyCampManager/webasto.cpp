@@ -1,4 +1,5 @@
 //#include <max6675.h>
+#include "webasto.h"
 
 // Define constants
 #define ON 	1
@@ -22,7 +23,7 @@
 #define WEBASTO_MAX_TEMPERATURE			70
 #define WEBASTO_TEMPERATURE_THRESHOLD		10
 
-/*
+
 
 // Define service variables
 boolean debug = true;
@@ -57,10 +58,10 @@ int cabinHeaterState	= OFF;
 int remoteControlState	= ON;
 
 // Initialize temperature sensor
-MAX6675 thermocouple(tempSensor[1], tempSensor[0], tempSensor[2]);
+//MAX6675 thermocouple(tempSensor[1], tempSensor[0], tempSensor[2]);
 
 // Setup the controller
-void setup(){
+void initWebasto(){
 
     // Is debug on
     if(debug == true){
@@ -82,22 +83,18 @@ void setup(){
     digitalWrite(onOffSwitch, HIGH);
 
     // Attach interrupt
-    attachInterrupt(0, turnOnOffSystem, CHANGE);
+  //  attachInterrupt(0, turnOnOffSystem, CHANGE);
 
     // Reset all modules
     resetAllModules();
 }
 
 // Start the controller
-void loop(){
+void poolWebasto(){
 
 	// If system has to be started or is already started
 	if(systemState == REMOTE_STARTING || systemState == ON){
-		// If starting from remote
-		if(systemState == REMOTE_STARTING){
-			// Blink the sideblinkers
-			if(blink(2, true, false)) return;
-		}
+		
 		// Set initial temperature
 		initialTemperature = measureTemp(3);
 		// If temperature is above max temperature level or temperature sensor is off
@@ -126,26 +123,8 @@ void loop(){
 		startWebasto();
 	}
 
-	// If system has to be stopped
-	else if(systemState == REMOTE_STOPPING || systemState == SYSTEM_STOPPING){
-	// Stop remote control receiver
-	stopRemoteControlReceiver();
-	// If stopping from remote
-	if(systemState == REMOTE_STOPPING){
-			// Blink the sideblinkers
-			blink(4, false, false);
-		}
-		// Stop the Webasto heater
-		stopWebasto();
-	}
-
 	// If system has to be shutdown
 	else if(systemState == REMOTE_SHUTDOWN || systemState == SYSTEM_SHUTDOWN){
-		// If shutting down from remote
-		if(systemState == REMOTE_SHUTDOWN){
-			// Blink the sideblinkers
-			if(blink(4, true, false)) return;
-		}
 		// Reset all modules
 		resetAllModules();
 		// Set system state
@@ -552,40 +531,6 @@ void stopCabinHeater(){
     }
 }
 
-// Start remote control receiver
-void startRemoteControlReceiver(){
-
-    // Start the remote control receiver
-    digitalWrite(remoteControl, OFF);
-
-    // Set module status
-    remoteControlState = ON;
-
-    // Is debug on
-    if(debug == true){
-
-        // Log
-        Serial.println("Remote control receiver on");
-    }
-}
-
-// Stop remote control receiver
-void stopRemoteControlReceiver(){
-
-    // Stop the remote control receiver
-    digitalWrite(remoteControl, ON);
-
-    // Set module status
-    remoteControlState = OFF;
-
-    // Is debug on
-    if(debug == true){
-
-        // Log
-        Serial.println("Remote control receiver off");
-    }
-}
-
 // Measure unit temperature
 double measureTemp(int maxRetries){
 
@@ -596,7 +541,9 @@ double measureTemp(int maxRetries){
     for (int i = 0; i < maxRetries; i++){
 
         // Measure temperature
-        temperature = thermocouple.readCelsius();
+	    // TODO : implémenter l'acquisition de température
+        //temperature = thermocouple.readCelsius();
+	    temperature = 0;
 
         // If temperature reading is ok
         if (!isnan(temperature)){
@@ -636,39 +583,10 @@ void resetAllModules(){
     stopGlowPlug();
     stopAirFan();
     stopCabinHeater();
-
-    // Turn on remote control receiver
-    startRemoteControlReceiver();
 }
 
-// Blink car blinkers
-boolean blink(int times, boolean stateChangeInterrupt, boolean tempChangeInterrupt){
-
-    // Start the loop
-    for(int i = 0; i < times; i++){
-
-        // Turn on blinkers
-        digitalWrite(carBlinkers, ON);
-
-        // Sleep for 0.2 seconds and listen for system state and temperature change
-        if(wait(200, stateChangeInterrupt, tempChangeInterrupt)) return true;
-
-        // Turn off blinkers
-        digitalWrite(carBlinkers, OFF);
-
-        // Sleep for 0.2 seconds and listen for system state and temperature change
-        if(wait(200, stateChangeInterrupt, tempChangeInterrupt)) return true;
-
-        // Is debug on
-        if(debug == true){
-
-            // Log
-            Serial.println("Blink");
-        }
-    }
-
-    // Return false if system state or temperature have not changed
-    return false;
+boolean isWebastoOn(){
+	return false;
 }
 
 // Custom delay
@@ -731,6 +649,6 @@ boolean wait(unsigned long milliseconds, boolean stateChangeInterrupt, boolean t
 
 
 
-*/
+
 
 

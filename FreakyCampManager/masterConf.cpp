@@ -64,3 +64,5 @@ byte tensionPins[] = {
 
 short tensions[NB_TENSION_SENSORS];
 
+boolean needHeaterOn;
+

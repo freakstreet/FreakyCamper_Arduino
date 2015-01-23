@@ -1,6 +1,6 @@
 #include "freakyCampManager.h"
 
-#include <adk.h>
+
 #include <Usb.h>
 #include <TimerOne.h>
 
@@ -14,6 +14,7 @@
 #include "tension.h"
 #include "water.h"
 #include "webasto.h"
+#include "heater.h"
 
 
 #define DEBUG
@@ -114,100 +115,8 @@ void freakyCampManagerLoop(){
 	}
 	delay(25);
 }
+ 
 
-void handleUsbError(byte ack){
-	switch (ack){
-
-		case hrBUSY :
-			break;
-
-		case hrBADREQ :
-			break;
-
-		case hrUNDEF :
-			break;
-
-		case hrNAK :
-			break;
-
-		case hrSTALL :
-			break;
-
-		case hrTOGERR :
-			break;
-
-		case hrWRONGPID :	// PID error, wrong or corrupted --> reset device
-		case hrPIDERR :
-				adk.Release();
-			break;
-
-		case hrBADBC :
-			break;
-
-
-		case hrPKTERR :
-			break;
-
-		case hrCRCERR :
-			break;
-
-		case hrKERR :
-			break;
-
-		case hrJERR :
-			break;
-
-		case hrTIMEOUT :
-			break;
-
-		case hrBABBLE :
-			break;
-
-	}
-}
-	    
-void sendTM(byte length){
-
-	byte i, ack, len;
-	
-	if (length==0) return;
-	
-	len = length+2*PROT_REPEAT_HEADER;
-	
-	// copy datas
-	for (i=length; i>0;i--)
-		txBuffer[i-1+PROT_REPEAT_HEADER] = txBuffer[i-1];
-	
-	// prepare header
-	for (i=0; i<PROT_REPEAT_HEADER;i++) 
-		txBuffer[i] =PROT_HEADER;
-			
-	// prepare footer
-	for (i=0; i<PROT_REPEAT_HEADER;i++) 
-		txBuffer[i+length+PROT_REPEAT_HEADER] =PROT_FOOTER;
-	
-	ack = adk.SndData(len, txBuffer);
-	
-	#ifdef DEBUG
-		printTM(len);
-		if (hrSUCCESS == ack){
-			Serial.println("ok");
-			watchdog = 0;
-		}
-		else {
-			Serial.print("USB error 0x");
-			Serial.println(ack, HEX);
-		}
-	#endif
-		
-	if (hrSUCCESS != ack)
-		handleUsbError(ack);
-}
-
-/*
-Init temperature sensors
-
-*/
 void freakyCampManagerStart() {
 	// Init Serial
 	#ifdef DEBUG
@@ -292,6 +201,8 @@ void campManagerPool(){
 	getInputs();
 	
 	sendAllTelemetry();
+	
+	handleHeater();
 	
 	watchdog++;
 	if (watchdog > PROT_WATCHDOG_MAX_SEC/PROT_TM_CYCLE_SEC){

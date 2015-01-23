@@ -4,7 +4,9 @@
 #include <Arduino.h>
 #include <DallasTemperature.h>
 #include <Button.h>
+#include <adk.h>
 
+extern ADK adk;
 
 //*****************************************************************************************************
 //	ELECTRICAL MODULE
@@ -192,7 +194,7 @@ typedef enum eTempSensorId{
 };
 
 extern DeviceAddress TempProbes[NB_TEMP_SENSORS];
-
+extern boolean useHotWater;
 
 
 //*****************************************************************************************************
@@ -208,6 +210,8 @@ extern DeviceAddress TempProbes[NB_TEMP_SENSORS];
 //*****************************************************************************************************
 #define		POUT_WEBASTO_FAN_1		02
 #define		POUT_WEBASTO_FAN_2		03
+
+extern boolean needHeaterOn;
 
 typedef enum eHeaterState{
 	HEATER_OFF = 0,

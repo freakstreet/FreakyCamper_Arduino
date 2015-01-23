@@ -1,7 +1,9 @@
 #include "water.h"
+#include "webasto.h"
 
 byte waterFlowLitersMin;
 long flowSensorIntsCount;
+boolean useHotWater;
 
 void poolWaterInfos(){
 	// Do nothing, 
@@ -14,6 +16,7 @@ void onWaterFlowSensorInterrupt()
 
 void waterModuleInit()
 {
+	useHotWater = false;
 	waterFlowLitersMin = 0;
 	flowSensorIntsCount = 0;
 	// pin activate tank level sensing set to out and 0v
@@ -46,13 +49,13 @@ byte getCleanWaterLevel()
 	// measure several times 
 	int meas = 0;
 	//Serial.print("tank levelx5 ");
-	for (int i=0; i<5; i++) {
+	for (int i=0; i<2; i++) {
 		adc = analogRead(TANK_WATER_LEVEL_INPUT);
 		//Serial.print(adc);
 		//Serial.print(",");
 		meas += adc;
 	}
-	meas = meas / 5;
+	meas = meas / 2;
 	//Serial.print(",moy=");
 	//Serial.println(meas);
 	
@@ -113,7 +116,15 @@ void onWaterFlowTimer(){
 	flowSensorIntsCount = 0;
 }
 
-
+void setHotWaterMode(boolean mode){
+	if (mode)
+		startWebasto();
+	else {
+		if (!needHeaterOn)
+			stopWebasto();
+	}
+	useHotWater = mode;
+}
 
 
 

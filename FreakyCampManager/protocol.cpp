@@ -13,11 +13,104 @@ byte watchdog = 0;
 byte rxBuffer[TELEMETRY_BUFFER_MAX_SIZE];
 byte txBuffer[TELEMETRY_BUFFER_MAX_SIZE];
 
+void handleUsbError(byte ack);
+
 byte tmBuilderIsAlive(){
 	byte p = 0;
 	txBuffer[p++] = TM_IS_ALIVE;
 	return p;
 }
+
+void sendTM(byte length){
+
+	byte i, ack, len;
+	
+	if (length==0) return;
+	
+	len = length+2*PROT_REPEAT_HEADER;
+	
+	// copy datas
+	for (i=length; i>0;i--)
+		txBuffer[i-1+PROT_REPEAT_HEADER] = txBuffer[i-1];
+	
+	// prepare header
+	for (i=0; i<PROT_REPEAT_HEADER;i++) 
+		txBuffer[i] =PROT_HEADER;
+			
+	// prepare footer
+	for (i=0; i<PROT_REPEAT_HEADER;i++) 
+		txBuffer[i+length+PROT_REPEAT_HEADER] =PROT_FOOTER;
+	
+	ack = adk.SndData(len, txBuffer);
+	
+	#ifdef DEBUG
+		printTM(len);
+		if (hrSUCCESS == ack){
+			Serial.println("ok");
+			watchdog = 0;
+		}
+		else {
+			Serial.print("USB error 0x");
+			Serial.println(ack, HEX);
+		}
+	#endif
+		
+	if (hrSUCCESS != ack)
+		handleUsbError(ack);
+}
+
+
+void handleUsbError(byte ack){
+	switch (ack){
+
+		case hrBUSY :
+			break;
+
+		case hrBADREQ :
+			break;
+
+		case hrUNDEF :
+			break;
+
+		case hrNAK :
+			break;
+
+		case hrSTALL :
+			break;
+
+		case hrTOGERR :
+			break;
+
+		case hrWRONGPID :	// PID error, wrong or corrupted --> reset device
+		case hrPIDERR :
+				adk.Release();
+			break;
+
+		case hrBADBC :
+			break;
+
+
+		case hrPKTERR :
+			break;
+
+		case hrCRCERR :
+			break;
+
+		case hrKERR :
+			break;
+
+		case hrJERR :
+			break;
+
+		case hrTIMEOUT :
+			break;
+
+		case hrBABBLE :
+			break;
+
+	}
+}
+	   
 
 void processReceivedCommand(int length){
 	int pData = 0;
