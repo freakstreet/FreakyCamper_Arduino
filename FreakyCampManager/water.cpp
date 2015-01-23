@@ -20,8 +20,8 @@ void waterModuleInit()
 	pinMode(PIO_WATER_ACTIVATE_SENSING, OUTPUT);
 	digitalWrite(PIO_WATER_ACTIVATE_SENSING, LOW);
 	// sensing pin set to output and set to 0v
-	pinMode(TANK_WATER_LEVEL_INPUT, OUTPUT);
-	digitalWrite(TANK_WATER_LEVEL_INPUT, LOW);
+	//pinMode(TANK_WATER_LEVEL_INPUT, OUTPUT);
+	//digitalWrite(TANK_WATER_LEVEL_INPUT, LOW);
 		
 	// Init interruptions
 	pinMode(PINT_WATER_FLOW_OUT,INPUT);  //initializes digital pin as an input
@@ -38,25 +38,37 @@ byte isDarkWaterTankFull()
 byte getCleanWaterLevel()
 {
 	byte res;
+	int adc;
 	// activate measuring pin
 	digitalWrite(PIO_WATER_ACTIVATE_SENSING, HIGH);
-	
+	pinMode(TANK_WATER_LEVEL_INPUT, INPUT);
+
 	// measure several times 
 	int meas = 0;
-	for (int i=0; i<5; i++) 
-		meas += analogRead(TANK_WATER_LEVEL_INPUT);
+	//Serial.print("tank levelx5 ");
+	for (int i=0; i<5; i++) {
+		adc = analogRead(TANK_WATER_LEVEL_INPUT);
+		//Serial.print(adc);
+		//Serial.print(",");
+		meas += adc;
+	}
 	meas = meas / 5;
+	//Serial.print(",moy=");
+	//Serial.println(meas);
 	
 	// desactivate sensor function
 	digitalWrite(PIO_WATER_ACTIVATE_SENSING, LOW);
-	pinMode(TANK_WATER_LEVEL_INPUT, OUTPUT);
-	digitalWrite(TANK_WATER_LEVEL_INPUT, LOW);
+	//pinMode(TANK_WATER_LEVEL_INPUT, OUTPUT);
+	//digitalWrite(TANK_WATER_LEVEL_INPUT, LOW);
 	
 	
 	if (meas-TANK_WATER_LEVEL_OFFSET<0)
 		meas = TANK_WATER_LEVEL_OFFSET;
 	
-	res = (byte)((meas-TANK_WATER_LEVEL_OFFSET)*TANK_WATER_LEVEL_FACTOR);
+	res = (byte)((meas-TANK_WATER_LEVEL_OFFSET)/TANK_WATER_LEVEL_FACTOR);
+	
+	//Serial.print("Tank level:");
+	//Serial.println(res);
 	
 	if (res > 100)
 		return 100;

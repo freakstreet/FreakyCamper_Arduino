@@ -160,8 +160,8 @@ extern Button* inputSwitchs[];
 #define	PIO_WATER_ACTIVATE_SENSING	32
 
 #define	TANK_WATER_LEVEL_INPUT		A10
-#define 	TANK_WATER_LEVEL_FACTOR		0.229
-#define 	TANK_WATER_LEVEL_OFFSET		50	
+#define 	TANK_WATER_LEVEL_FACTOR		4.19
+#define 	TANK_WATER_LEVEL_OFFSET		5	
 
 // L'entrée de trop plein du réservoir eaux grises est en pull up --> à 1 quand pas plein
 #define		PIN_TANK_DARK_FULL			30	//	http://www.seeedstudio.com/depot/water-level-switch-p-565.html?cPath=25
@@ -208,6 +208,14 @@ extern DeviceAddress TempProbes[NB_TEMP_SENSORS];
 //*****************************************************************************************************
 #define		POUT_WEBASTO_FAN_1		02
 #define		POUT_WEBASTO_FAN_2		03
+
+typedef enum eHeaterState{
+	HEATER_OFF = 0,
+	HEATER_MANUAL = 1,
+	HEATER_AUTO = 2,
+	HEATER_HOT_MANUAL = 3,
+	HEATER_HOT_AUTO = 4
+};
 
 
 

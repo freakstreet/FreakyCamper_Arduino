@@ -4,6 +4,7 @@
 #include "current.h"
 #include "water.h"
 #include "light.h"
+#include "heater.h"
 
 #include "temperatureSensors.h"
 
@@ -88,6 +89,7 @@ void processReceivedCommand(int length){
 		case PROT_HEATER :
 			Serial.print("TC Heater: ");
 			Serial.println("");
+			heaterGotTC((eHeaterState)rxBuffer[pData+1], (byte)rxBuffer[pData+2], (byte)rxBuffer[pData+3], rxBuffer[(byte)pData+4]);
 			break;
 	
 	}
@@ -159,6 +161,8 @@ byte tmBuilderWater(){
 	txBuffer[p++] = getCleanWaterLevel();
 	txBuffer[p++] = isDarkWaterTankFull();
 	txBuffer[p++] = waterFlowLitersMin;
+	txBuffer[p++] = isEvierOpened();
+	txBuffer[p++] = isShowerOpened();
 	return p;
 }
 

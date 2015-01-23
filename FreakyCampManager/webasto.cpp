@@ -1,4 +1,4 @@
-#include <max6675.h>
+//#include <max6675.h>
 
 // Define constants
 #define ON 	1
@@ -21,6 +21,8 @@
 #define WEBASTO_MAX_START_ATTEMPTS			3
 #define WEBASTO_MAX_TEMPERATURE			70
 #define WEBASTO_TEMPERATURE_THRESHOLD		10
+
+/*
 
 // Define service variables
 boolean debug = true;
@@ -726,3 +728,9 @@ boolean wait(unsigned long milliseconds, boolean stateChangeInterrupt, boolean t
     // Return false if system state has not changed
     return false;
 }
+
+
+
+*/
+
+

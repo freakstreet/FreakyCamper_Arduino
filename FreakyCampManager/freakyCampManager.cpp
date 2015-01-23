@@ -13,6 +13,8 @@
 #include "current.h"
 #include "tension.h"
 #include "water.h"
+#include "webasto.h"
+
 
 #define DEBUG
 
@@ -166,26 +168,28 @@ void handleUsbError(byte ack){
 	    
 void sendTM(byte length){
 
-	uint16_t pos = 0;
-	byte i, ack;
+	byte i, ack, len;
 	
 	if (length==0) return;
 	
+	len = length+2*PROT_REPEAT_HEADER;
+	
+	// copy datas
+	for (i=length; i>0;i--)
+		txBuffer[i-1+PROT_REPEAT_HEADER] = txBuffer[i-1];
+	
 	// prepare header
 	for (i=0; i<PROT_REPEAT_HEADER;i++) 
-		txBuffer[pos++] =PROT_HEADER;
-	// copy datas
-	for (i=0; i<length;i++)
-		txBuffer[pos++] = txBuffer[i];
-		
+		txBuffer[i] =PROT_HEADER;
+			
 	// prepare footer
 	for (i=0; i<PROT_REPEAT_HEADER;i++) 
-		txBuffer[pos++] =PROT_FOOTER;
+		txBuffer[i+length+PROT_REPEAT_HEADER] =PROT_FOOTER;
 	
-	ack = adk.SndData(pos, txBuffer);
+	ack = adk.SndData(len, txBuffer);
 	
 	#ifdef DEBUG
-		printTM(pos);
+		printTM(len);
 		if (hrSUCCESS == ack){
 			Serial.println("ok");
 			watchdog = 0;
@@ -267,15 +271,15 @@ void sendAllTelemetry(){
 	len = tmBuilderSwitch();
 	sendTM(len);
 	len = tmBuilderTension();
-	sendTM(len);
+/*	sendTM(len);
 	len = tmBuilderCurrent();
-	sendTM(len);	
-	len = tmBuilderWater();
-//	sendTM(len);
-	len = tmBuilderLight(0);
+//	sendTM(len);	
+*/	len = tmBuilderWater();
 	sendTM(len);
-	len = tmBuilderColdHot();
+/*	len = tmBuilderLight(0);
 //	sendTM(len);
+	len = tmBuilderColdHot();
+//	sendTM(len);*/
 }
 
 
